@@ -1,19 +1,21 @@
-import React, { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
-import { motion } from "framer-motion"
-import { toast } from "react-toastify"
-import Header from "@/components/organisms/Header"
-import StatCard from "@/components/molecules/StatCard"
-import QuickAction from "@/components/molecules/QuickAction"
-import Loading from "@/components/ui/Loading"
-import Error from "@/components/ui/Error"
-import ApperIcon from "@/components/ApperIcon"
-import studentService from "@/services/api/studentService"
-import classService from "@/services/api/classService"
-import gradeService from "@/services/api/gradeService"
-import attendanceService from "@/services/api/attendanceService"
-import { formatDate } from "@/utils/formatters"
-import { calculateLetterGrade } from "@/utils/gradeUtils"
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { toast } from "react-toastify";
+import ApperIcon from "@/components/ApperIcon";
+import Header from "@/components/organisms/Header";
+import QuickAction from "@/components/molecules/QuickAction";
+import StatCard from "@/components/molecules/StatCard";
+import Loading from "@/components/ui/Loading";
+import Error from "@/components/ui/Error";
+import Grades from "@/components/pages/Grades";
+import Students from "@/components/pages/Students";
+import classService from "@/services/api/classService";
+import studentService from "@/services/api/studentService";
+import attendanceService from "@/services/api/attendanceService";
+import gradeService from "@/services/api/gradeService";
+import { calculateLetterGrade } from "@/utils/gradeUtils";
+import { formatDate } from "@/utils/formatters";
 
 const Dashboard = () => {
   const navigate = useNavigate()
@@ -75,15 +77,15 @@ const Dashboard = () => {
   }
 
   // Calculate statistics
-  const activeStudents = students.filter(s => s.status === "Active").length
+const activeStudents = students.filter(s => s.status_c === "Active").length
   const totalClasses = classes.length
   const averageGrade = grades.length > 0 ? 
-    grades.reduce((sum, grade) => sum + (grade.score / grade.maxScore * 100), 0) / grades.length : 0
-  const todayAttendance = attendance.filter(a => 
-    new Date(a.date).toDateString() === new Date().toDateString()
+grades.reduce((sum, grade) => sum + (grade.score_c / grade.max_score_c * 100), 0) / grades.length : 0
+const todayAttendance = attendance.filter(a => 
+    new Date(a.date_c).toDateString() === new Date().toDateString()
   )
   const attendanceRate = todayAttendance.length > 0 ?
-    (todayAttendance.filter(a => a.status === "Present").length / todayAttendance.length * 100) : 0
+(todayAttendance.filter(a => a.status_c === "Present").length / todayAttendance.length * 100) : 0
 
   // Recent activities
   const recentStudents = students.slice(-5).reverse()
@@ -214,14 +216,14 @@ const Dashboard = () => {
                       onClick={() => navigate(`/students/${student.Id}`)}
                     >
                       <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white text-xs font-medium">
-                        {student.firstName[0]}{student.lastName[0]}
+{student.first_name_c?.[0] || ""}{student.last_name_c?.[0] || ""}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 truncate">
-                          {student.firstName} {student.lastName}
+{student.first_name_c} {student.last_name_c}
                         </p>
                         <p className="text-xs text-gray-500">
-                          {student.grade} • {formatDate(student.enrollmentDate)}
+{student.grade_c} • {formatDate(student.enrollment_date_c)}
                         </p>
                       </div>
                       <ApperIcon name="ChevronRight" size={14} className="text-gray-400" />
@@ -249,11 +251,10 @@ const Dashboard = () => {
                   </button>
                 </div>
                 <div className="space-y-3">
-                  {recentGrades.map((grade, index) => {
-                    const student = students.find(s => s.Id === grade.studentId)
-                    const percentage = (grade.score / grade.maxScore) * 100
+{recentGrades.map((grade, index) => {
+                    const student = students.find(s => s.Id === (grade.student_id_c?.Id || grade.student_id_c))
+                    const percentage = (grade.score_c / grade.max_score_c) * 100
                     const letterGrade = calculateLetterGrade(percentage)
-                    
                     return (
                       <motion.div
                         key={grade.Id}
@@ -264,15 +265,15 @@ const Dashboard = () => {
                       >
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-gray-900 truncate">
-                            {grade.assignmentName}
+{grade.assignment_name_c}
                           </p>
                           <p className="text-xs text-gray-500">
-                            {student ? `${student.firstName} ${student.lastName}` : "Unknown Student"}
+{student ? `${student.first_name_c} ${student.last_name_c}` : "Unknown Student"}
                           </p>
                         </div>
                         <div className="flex items-center space-x-2">
                           <span className="text-sm font-medium text-gray-900">
-                            {grade.score}/{grade.maxScore}
+{grade.score_c}/{grade.max_score_c}
                           </span>
                           <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold ${
                             letterGrade === "A" ? "bg-green-100 text-green-700" :
@@ -316,14 +317,14 @@ const Dashboard = () => {
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
-                      <h4 className="font-medium text-gray-900">{classItem.name}</h4>
-                      <p className="text-sm text-gray-600">{classItem.subject}</p>
+<h4 className="font-medium text-gray-900">{classItem.Name}</h4>
+<p className="text-sm text-gray-600">{classItem.subject_c}</p>
                       <div className="flex items-center mt-2 text-xs text-gray-500">
                         <ApperIcon name="Clock" size={12} className="mr-1" />
-                        {classItem.period}
+{classItem.period_c}
                         <span className="mx-2">•</span>
                         <ApperIcon name="MapPin" size={12} className="mr-1" />
-                        {classItem.room}
+{classItem.room_c}
                       </div>
                     </div>
                     <ApperIcon name="ChevronRight" size={16} className="text-gray-400" />

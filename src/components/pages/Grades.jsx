@@ -1,19 +1,21 @@
-import React, { useState, useEffect } from "react"
-import { toast } from "react-toastify"
-import { motion } from "framer-motion"
-import Header from "@/components/organisms/Header"
-import Loading from "@/components/ui/Loading"
-import Error from "@/components/ui/Error"
-import Empty from "@/components/ui/Empty"
-import Button from "@/components/atoms/Button"
-import Input from "@/components/atoms/Input"
-import Select from "@/components/atoms/Select"
-import GradeBadge from "@/components/molecules/GradeBadge"
-import ApperIcon from "@/components/ApperIcon"
-import gradeService from "@/services/api/gradeService"
-import studentService from "@/services/api/studentService"
-import classService from "@/services/api/classService"
-import { formatDate } from "@/utils/formatters"
+import React, { useEffect, useState } from "react";
+import { toast } from "react-toastify";
+import { motion } from "framer-motion";
+import ApperIcon from "@/components/ApperIcon";
+import Header from "@/components/organisms/Header";
+import GradeBadge from "@/components/molecules/GradeBadge";
+import Loading from "@/components/ui/Loading";
+import Error from "@/components/ui/Error";
+import Empty from "@/components/ui/Empty";
+import Select from "@/components/atoms/Select";
+import Button from "@/components/atoms/Button";
+import Input from "@/components/atoms/Input";
+import Classes from "@/components/pages/Classes";
+import Students from "@/components/pages/Students";
+import classService from "@/services/api/classService";
+import studentService from "@/services/api/studentService";
+import gradeService from "@/services/api/gradeService";
+import { formatDate } from "@/utils/formatters";
 
 const Grades = () => {
   const [grades, setGrades] = useState([])
@@ -68,13 +70,13 @@ const Grades = () => {
 
     if (searchTerm) {
       filtered = filtered.filter(grade => {
-        const student = students.find(s => s.Id === grade.studentId)
-        const classInfo = classes.find(c => c.Id === grade.classId)
-        const studentName = student ? `${student.firstName} ${student.lastName}` : ""
-        const className = classInfo ? classInfo.name : ""
+const student = students.find(s => s.Id === grade.student_id_c?.Id || grade.student_id_c)
+        const classInfo = classes.find(c => c.Id === grade.class_id_c?.Id || grade.class_id_c)
+        const studentName = student ? `${student.first_name_c} ${student.last_name_c}` : ""
+        const className = classInfo ? classInfo.Name : ""
         
         return (
-          grade.assignmentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+grade.assignment_name_c?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
           className.toLowerCase().includes(searchTerm.toLowerCase())
         )
@@ -82,11 +84,11 @@ const Grades = () => {
     }
 
     if (selectedClass) {
-      filtered = filtered.filter(grade => grade.classId === parseInt(selectedClass))
+filtered = filtered.filter(grade => (grade.class_id_c?.Id || grade.class_id_c) === parseInt(selectedClass))
     }
 
     if (selectedStudent) {
-      filtered = filtered.filter(grade => grade.studentId === parseInt(selectedStudent))
+filtered = filtered.filter(grade => (grade.student_id_c?.Id || grade.student_id_c) === parseInt(selectedStudent))
     }
 
     setFilteredGrades(filtered)
@@ -95,24 +97,25 @@ const Grades = () => {
   const handleAddGrade = async (e) => {
     e.preventDefault()
     
-    if (!newGrade.studentId || !newGrade.classId || !newGrade.assignmentName || !newGrade.score || !newGrade.maxScore) {
+if (!newGrade.studentId || !newGrade.classId || !newGrade.assignmentName || !newGrade.score || !newGrade.maxScore) {
       toast.error("Please fill in all required fields")
       return
     }
 
     try {
-      const gradeData = {
-        ...newGrade,
-        studentId: parseInt(newGrade.studentId),
-        classId: parseInt(newGrade.classId),
-        score: parseFloat(newGrade.score),
-        maxScore: parseFloat(newGrade.maxScore),
-        date: new Date(newGrade.date).toISOString()
+const gradeData = {
+        student_id_c: parseInt(newGrade.studentId),
+        class_id_c: parseInt(newGrade.classId),
+        assignment_name_c: newGrade.assignmentName,
+        score_c: parseFloat(newGrade.score),
+        max_score_c: parseFloat(newGrade.maxScore),
+        date_c: new Date(newGrade.date).toISOString().split('T')[0],
+        category_c: newGrade.category
       }
 
       const createdGrade = await gradeService.create(gradeData)
       setGrades(prev => [...prev, createdGrade])
-      setNewGrade({
+setNewGrade({
         studentId: "",
         classId: "",
         assignmentName: "",
@@ -194,7 +197,7 @@ const Grades = () => {
             >
               <option value="">All Classes</option>
               {classes.map(cls => (
-                <option key={cls.Id} value={cls.Id}>{cls.name}</option>
+<option key={cls.Id} value={cls.Id}>{cls.Name}</option>
               ))}
             </Select>
             
@@ -206,7 +209,7 @@ const Grades = () => {
               <option value="">All Students</option>
               {students.map(student => (
                 <option key={student.Id} value={student.Id}>
-                  {student.firstName} {student.lastName}
+{student.first_name_c} {student.last_name_c}
                 </option>
               ))}
             </Select>
@@ -240,9 +243,9 @@ const Grades = () => {
                 required
               >
                 <option value="">Select Student</option>
-                {students.map(student => (
-                  <option key={student.Id} value={student.Id}>
-                    {student.firstName} {student.lastName}
+{students.map(student => (
+<option key={student.Id} value={student.Id}>
+                    {student.first_name_c} {student.last_name_c}
                   </option>
                 ))}
               </Select>
@@ -255,7 +258,7 @@ const Grades = () => {
               >
                 <option value="">Select Class</option>
                 {classes.map(cls => (
-                  <option key={cls.Id} value={cls.Id}>{cls.name}</option>
+<option key={cls.Id} value={cls.Id}>{cls.Name}</option>
                 ))}
               </Select>
 
@@ -374,8 +377,8 @@ const Grades = () => {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {filteredGrades.map((grade, index) => {
-                    const student = students.find(s => s.Id === grade.studentId)
-                    const classInfo = classes.find(c => c.Id === grade.classId)
+const student = students.find(s => s.Id === (grade.student_id_c?.Id || grade.student_id_c))
+                    const classInfo = classes.find(c => c.Id === (grade.class_id_c?.Id || grade.class_id_c))
                     
                     return (
                       <motion.tr
@@ -388,40 +391,40 @@ const Grades = () => {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div>
                             <div className="text-sm font-medium text-gray-900">
-                              {grade.assignmentName}
+{grade.assignment_name_c}
                             </div>
-                            <div className="text-sm text-gray-500">{grade.category}</div>
+<div className="text-sm text-gray-500">{grade.category_c}</div>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">
-                            {student ? `${student.firstName} ${student.lastName}` : "Unknown Student"}
+{student ? `${student.first_name_c} ${student.last_name_c}` : "Unknown Student"}
                           </div>
                           {student && (
-                            <div className="text-sm text-gray-500">{student.grade}</div>
+<div className="text-sm text-gray-500">{student.grade_c}</div>
                           )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">
-                            {classInfo ? classInfo.name : "Unknown Class"}
+{classInfo ? classInfo.Name : "Unknown Class"}
                           </div>
                           {classInfo && (
-                            <div className="text-sm text-gray-500">{classInfo.subject}</div>
+<div className="text-sm text-gray-500">{classInfo.subject_c}</div>
                           )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">
-                            {grade.score}/{grade.maxScore}
+{grade.score_c}/{grade.max_score_c}
                           </div>
                           <div className="text-sm text-gray-500">
-                            {((grade.score / grade.maxScore) * 100).toFixed(1)}%
+{((grade.score_c / grade.max_score_c) * 100).toFixed(1)}%
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <GradeBadge score={grade.score} maxScore={grade.maxScore} />
+<GradeBadge score={grade.score_c} maxScore={grade.max_score_c} />
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {formatDate(grade.date)}
+{formatDate(grade.date_c)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <button

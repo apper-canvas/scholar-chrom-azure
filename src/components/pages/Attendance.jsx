@@ -54,14 +54,14 @@ const Attendance = () => {
   useEffect(() => {
     // Load existing attendance for selected date and class
     if (selectedClass && selectedDate) {
-      const existingAttendance = attendance.filter(a => 
-        a.classId === parseInt(selectedClass) && 
-        new Date(a.date).toDateString() === new Date(selectedDate).toDateString()
+const existingAttendance = attendance.filter(a => 
+        (a.class_id_c?.Id || a.class_id_c) === parseInt(selectedClass) && 
+        new Date(a.date_c).toDateString() === new Date(selectedDate).toDateString()
       )
       
       const attendanceMap = {}
-      existingAttendance.forEach(record => {
-        attendanceMap[record.studentId] = record.status
+existingAttendance.forEach(record => {
+        attendanceMap[record.student_id_c?.Id || record.student_id_c] = record.status_c
       })
       
       setTodayAttendance(attendanceMap)
@@ -72,12 +72,12 @@ const Attendance = () => {
     if (!selectedClass) return []
     
     // Get students who have grades or attendance in this class
-    const classGrades = attendance.filter(a => a.classId === parseInt(selectedClass))
-    const studentIds = new Set(classGrades.map(a => a.studentId))
+const classGrades = attendance.filter(a => (a.class_id_c?.Id || a.class_id_c) === parseInt(selectedClass))
+    const studentIds = new Set(classGrades.map(a => a.student_id_c?.Id || a.student_id_c))
     
     // If no students found in attendance, return all active students
     if (studentIds.size === 0) {
-      return students.filter(s => s.status === "Active").slice(0, 10) // Limit to first 10 for demo
+return students.filter(s => s.status_c === "Active").slice(0, 10) // Limit to first 10 for demo
     }
     
     return students.filter(s => studentIds.has(s.Id))
@@ -99,18 +99,18 @@ const Attendance = () => {
     try {
       const promises = Object.entries(todayAttendance).map(async ([studentId, status]) => {
         // Check if attendance already exists
-        const existing = attendance.find(a => 
-          a.studentId === parseInt(studentId) && 
-          a.classId === parseInt(selectedClass) &&
-          new Date(a.date).toDateString() === new Date(selectedDate).toDateString()
+const existing = attendance.find(a => 
+          (a.student_id_c?.Id || a.student_id_c) === parseInt(studentId) && 
+          (a.class_id_c?.Id || a.class_id_c) === parseInt(selectedClass) &&
+          new Date(a.date_c).toDateString() === new Date(selectedDate).toDateString()
         )
 
-        const attendanceData = {
-          studentId: parseInt(studentId),
-          classId: parseInt(selectedClass),
-          date: new Date(selectedDate).toISOString(),
-          status: status,
-          notes: ""
+const attendanceData = {
+          student_id_c: parseInt(studentId),
+          class_id_c: parseInt(selectedClass),
+          date_c: new Date(selectedDate).toISOString().split('T')[0],
+          status_c: status,
+          notes_c: ""
         }
 
         if (existing) {
@@ -131,14 +131,14 @@ const Attendance = () => {
   }
 
   const getAttendanceStats = () => {
-    const todayRecords = attendance.filter(a => 
-      new Date(a.date).toDateString() === new Date().toDateString()
+const todayRecords = attendance.filter(a => 
+      new Date(a.date_c).toDateString() === new Date().toDateString()
     )
     
     const totalToday = todayRecords.length
-    const presentToday = todayRecords.filter(a => a.status === "Present").length
-    const absentToday = todayRecords.filter(a => a.status === "Absent").length
-    const lateToday = todayRecords.filter(a => a.status === "Late").length
+const presentToday = todayRecords.filter(a => a.status_c === "Present").length
+    const absentToday = todayRecords.filter(a => a.status_c === "Absent").length
+    const lateToday = todayRecords.filter(a => a.status_c === "Late").length
     
     return { totalToday, presentToday, absentToday, lateToday }
   }
@@ -257,7 +257,7 @@ const Attendance = () => {
               >
                 <option value="">Choose a class</option>
                 {classes.map(cls => (
-                  <option key={cls.Id} value={cls.Id}>{cls.name}</option>
+<option key={cls.Id} value={cls.Id}>{cls.Name}</option>
                 ))}
               </Select>
 
@@ -287,13 +287,13 @@ const Attendance = () => {
                     >
                       <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white font-medium text-sm">
-                          {student.firstName[0]}{student.lastName[0]}
+{student.first_name_c?.[0] || ""}{student.last_name_c?.[0] || ""}
                         </div>
                         <div>
                           <div className="font-medium text-gray-900">
-                            {student.firstName} {student.lastName}
+{student.first_name_c} {student.last_name_c}
                           </div>
-                          <div className="text-sm text-gray-500">{student.grade}</div>
+<div className="text-sm text-gray-500">{student.grade_c}</div>
                         </div>
                       </div>
 
@@ -404,34 +404,34 @@ const Attendance = () => {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white text-xs font-medium">
-                              {student ? `${student.firstName[0]}${student.lastName[0]}` : "?"}
+{student ? `${student.first_name_c?.[0] || ""}${student.last_name_c?.[0] || ""}` : "?"}
                             </div>
                             <div className="ml-3">
                               <div className="text-sm font-medium text-gray-900">
-                                {student ? `${student.firstName} ${student.lastName}` : "Unknown Student"}
+{student ? `${student.first_name_c} ${student.last_name_c}` : "Unknown Student"}
                               </div>
                               {student && (
-                                <div className="text-sm text-gray-500">{student.grade}</div>
+<div className="text-sm text-gray-500">{student.grade_c}</div>
                               )}
                             </div>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">
-                            {classInfo ? classInfo.name : "Unknown Class"}
+{classInfo ? classInfo.Name : "Unknown Class"}
                           </div>
                           {classInfo && (
-                            <div className="text-sm text-gray-500">{classInfo.subject}</div>
+<div className="text-sm text-gray-500">{classInfo.subject_c}</div>
                           )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {formatDate(record.date)}
+{formatDate(record.date_c)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <AttendanceStatus status={record.status} />
+<AttendanceStatus status={record.status_c} />
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {record.notes || "-"}
+{record.notes_c || "-"}
                         </td>
                       </motion.tr>
                     )
